@@ -3,6 +3,9 @@
 set -e
 
 ccache -s
+export CC="clang"
+export CXX="clang++"
+
 export PATH="/usr/lib/ccache/bin/:$PATH"
 
 JOB="$1"
@@ -13,7 +16,16 @@ cd llvm
 git reset --hard
 git clean -fd
 git pull
-cd tools/clang
+cd projects/compiler-rt
+git reset --hard
+git clean -fd
+git pull
+cd ../..
+cd tools/clang/tools/extra
+git reset --hard
+git clean -fd
+git pull
+cd ../..
 git reset --hard
 git clean -fd
 git pull
@@ -37,14 +49,15 @@ else
     exit 1
   fi
 fi
-
-cd ../../../
-
 set -e
+
+cd ../../..
+
 
 rm -rf build
 mkdir build
 cd build
-cmake -DLLVM_ENABLE_EXPENSIVE_CHECKS=ON -DLLVM_CCACHE_BUILD=On -DCMAKE_BUILD_TYPE=Release -DLLVM_LINK_LLVM_DYLIB=On -DLLVM_ENABLE_ASSERTIONS=On -DLLVM_LIT_ARGS="-v -j 3" -GNinja ../llvm
+cmake -DCMAKE_C_FLAGS="-Wno-gnu-statement-expression" -DLLVM_ENABLE_EXPENSIVE_CHECKS=ON -DLLVM_CCACHE_BUILD=On -DCMAKE_BUILD_TYPE=Release -DLLVM_LINK_LLVM_DYLIB=On -DLLVM_ENABLE_ASSERTIONS=On -DLLVM_LIT_ARGS="-v -j 3" -GNinja ../llvm
 ninja all check-clang -j3
 
+echo "BUILD SUCCESS"

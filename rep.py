@@ -5,6 +5,7 @@ import os
 import time
 import datetime
 import subprocess
+import codecs
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
 
@@ -21,7 +22,7 @@ test_status = re.compile(r'\((\d+) of (\d+)\)')
 
 def get_progress(f):
   if f == "NULL":
-    return ""
+    return 100
   path = report_dir + f
   contents = open(path).readlines()[::-1]
   for line in contents:
@@ -40,8 +41,8 @@ def get_progress(f):
     if m1 or m2:
       #print("l" + str(left) + ":" + str(right))
       percent += (left / right) * 0.5
-      return str(int(percent * 100))
-  return "0"
+      return int(percent * 100)
+  return 0
 
 def get_title_impl(review):
   soup = BeautifulSoup(urlopen(reviews_page + review), "html.parser")
@@ -52,6 +53,37 @@ def get_title(review):
     cached_titles[review] = get_title_impl(review)
   return cached_titles[review]
 
+def is_review_good(review):
+  with open(report_dir + review) as f:
+    for line in f:
+      if "BUILD SUCCESS" in line:
+        return 0
+      if "warning:" in line.lower():
+        return 1
+      if "error:" in line.lower():
+        return 2
+      if "exit code 1" in line.lower():
+        return 2
+      if "+ exit 1" in line.lower():
+        return 2
+      if "build failure" in line.lower():
+        return 2
+  return 3
+
+def get_review_image(review):
+   review_status = is_review_good(review)
+   if review_status == 2:
+     return "bad.jpg"
+   elif review_status == 1:
+     return "warning.jpg"
+   elif review_status == 0:
+     return "good.jpg"
+   else:
+     return "progress.jpg"
+
+def is_queued(review):
+  return os.path.isfile(queue_dir + review)
+
 def get_ccache_stats():
   return subprocess.check_output('ccache -s | grep "hit rate"', shell=True).decode('utf-8')
 
@@ -61,13 +93,13 @@ def get_log_tail(review):
   return subprocess.check_output('tail -n14 ' + report_dir + review + ' | recode utf8..html', shell=True).decode('utf-8')
 
 def generate_report(output_file, current_job):
-    out = open(output_file + ".tmp", "w")
+    out = codecs.open(output_file + ".tmp", "w", "utf-8")
     current_percent = get_progress(current_job)
     out.write('<p>Running: <a href="' + report_url + current_job + '">' + current_job + '</a> - <a href="' + reviews_page + current_job + '">' + get_title(current_job) + '</a>')
-    out.write('<br><progress style="width: 34em;" value="' + current_percent + '" max="100"> </p>\n')
+    out.write('<br><progress style="width: 34em;" value="' + str(current_percent) + '" max="100"> </p>\n')
     out.write('<p style="font-size: 8px;"> Last update: ' + datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S') + '</p>')
     out.write('<pre style="font-size: 8px;">' + get_ccache_stats() + '</pre>')
-    out.write('<pre style="background-color: beige; border-style: double;">' + get_log_tail(current_job) + '</pre>')
+    out.write('<pre style="background-color: #073642; color: #839496; border-style: double;">' + get_log_tail(current_job) + '</pre>')
     out.write("<h2>Queued</h2>\n")
     out.write("<ul>\n")
     for f in sorted_ls(queue_dir)[1:15]:
@@ -80,9 +112,9 @@ def generate_report(output_file, current_job):
     out.write("<h2>Done jobs</h2>\n")
     out.write("<ul>\n")
     for f in sorted_ls(report_dir)[0:100][::-1]:
-        if f != current_job:
+        if f != current_job and not is_queued(f):
             if diff_reg.match(f):
-                out.write('<li><a href="' + report_url + f + '">' + f + '</a> - <a href="' + reviews_page + f + '">')
+                out.write('<li><img style="max-height: 14; padding-right: 7;" src="https://teemperor.de/pub/icons/' + get_review_image(f) + '"></img><a href="' + report_url + f + '">' + f + '</a> - <a href="' + reviews_page + f + '">')
                 out.write(get_title(f))
                 out.write('</a></li>\n')
     out.write("</ul>\n")
@@ -94,12 +126,12 @@ def sorted_ls(path):
     return list(sorted(os.listdir(path), key=mtime))
 
 while True:
-  time.sleep(1)
-  try:
+    time.sleep(1)
+  #try:
     current_running = "NULL"
     jobs = sorted_ls(queue_dir)
     if len(jobs):
       current_running = jobs[0]
     generate_report("/var/www/cci_inc.html", current_running)
-  except:
-    pass
+  #except:
+    #pass
