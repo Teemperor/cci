@@ -1,5 +1,7 @@
 #!/usr/bin/bash
 
+date
+
 set -e
 
 ccache -s
@@ -49,6 +51,15 @@ else
     exit 1
   fi
 fi
+git add *
+git clang-format --diff
+git clang-format --diff | grep -q "clang-format did not modify any files"
+if [ $? -eq 0 ]; then
+    echo "CLANG-FORMAT-OK"
+else
+    echo "CLANG-FORMAT-FAIL"
+fi
+
 set -e
 
 cd ../../..
@@ -57,7 +68,11 @@ cd ../../..
 rm -rf build
 mkdir build
 cd build
-cmake -DCMAKE_C_FLAGS="-Wno-gnu-statement-expression" -DLLVM_ENABLE_EXPENSIVE_CHECKS=ON -DLLVM_CCACHE_BUILD=On -DCMAKE_BUILD_TYPE=Release -DLLVM_LINK_LLVM_DYLIB=On -DLLVM_ENABLE_ASSERTIONS=On -DLLVM_LIT_ARGS="-v -j 3" -GNinja ../llvm
-ninja all check-clang -j3
+cmake -DCMAKE_C_FLAGS="-march=native -Wno-gnu-statement-expression" \
+      -DCMAKE_CXX_FLAGS="-march=native" \
+      -DLLVM_ENABLE_EXPENSIVE_CHECKS=ON -DLLVM_CCACHE_BUILD=On \
+      -DCMAKE_BUILD_TYPE=Release -DLLVM_LINK_LLVM_DYLIB=On -DLLVM_ENABLE_ASSERTIONS=On \
+      -DLLVM_LIT_ARGS="-v -j 3" -GNinja ../llvm
+ninja all check-clang -j3 -l 3
 
 echo "BUILD SUCCESS"
