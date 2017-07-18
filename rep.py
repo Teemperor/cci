@@ -70,6 +70,15 @@ def is_review_good(review):
         return 2
   return 3
 
+def is_review_format_bad(review):
+  with open(report_dir + review) as f:
+    for line in f:
+      if "CLANG-FORMAT-OK" in line:
+        return False
+      if "CLANG-FORMAT-FALSE" in line:
+        return True
+  return True
+
 def get_review_image(review):
    review_status = is_review_good(review)
    if review_status == 2:
@@ -116,7 +125,11 @@ def generate_report(output_file, current_job):
             if diff_reg.match(f):
                 out.write('<li><img style="max-height: 14; padding-right: 7;" src="https://teemperor.de/pub/icons/' + get_review_image(f) + '"></img><a href="' + report_url + f + '">' + f + '</a> - <a href="' + reviews_page + f + '">')
                 out.write(get_title(f))
-                out.write('</a></li>\n')
+                out.write('</a>')
+                if is_review_format_bad(f):
+                  out.write('<span style="color:red;"> [clang-format]</span> ')
+                out.write('<a href="https://teemperor.de/cci-submit.php?rev=' + f + '">[rerun]</a>')
+                out.write('</li>\n')
     out.write("</ul>\n")
     out.close()
     os.rename(output_file + ".tmp", output_file)
