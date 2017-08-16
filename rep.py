@@ -82,19 +82,19 @@ def is_review_format_bad(review):
 def get_review_image(review):
    review_status = is_review_good(review)
    if review_status == 2:
-     return "bad.jpg"
+     return '<span style="color: red;">✗</span>'
    elif review_status == 1:
-     return "warning.jpg"
+     return '<span style="color: #ffaf00;">⚠</span>'
    elif review_status == 0:
-     return "good.jpg"
+     return '<span style="color: green;">✓</span>'
    else:
-     return "progress.jpg"
+     return '?'
 
 def is_queued(review):
   return os.path.isfile(queue_dir + review)
 
 def get_ccache_stats():
-  return subprocess.check_output('ccache -s | grep "hit rate"', shell=True).decode('utf-8')
+  return subprocess.check_output('ccache -s | grep cache | grep -v ccache', shell=True).decode('utf-8')
 
 def get_log_tail(review):
   if review == "NULL":
@@ -113,7 +113,7 @@ def generate_report(output_file, current_job):
     out.write("<ul>\n")
     for f in sorted_ls(queue_dir)[1:15]:
         if diff_reg.match(f):
-            out.write('<li>' + f + ' - <a href="' + reviews_page + f + '"> ')
+            out.write('<li style="list-style-type: none;">' + f + ' - <a href="' + reviews_page + f + '"> ')
             out.write(get_title(f))
             out.write('</a></li>\n')
     out.write("</ul>\n")
@@ -123,7 +123,7 @@ def generate_report(output_file, current_job):
     for f in sorted_ls(report_dir)[0:100][::-1]:
         if f != current_job and not is_queued(f):
             if diff_reg.match(f):
-                out.write('<li><img style="max-height: 14; padding-right: 7;" src="https://teemperor.de/pub/icons/' + get_review_image(f) + '"></img><a href="' + report_url + f + '">' + f + '</a> - <a href="' + reviews_page + f + '">')
+                out.write('<li style="list-style-type: none;">' + get_review_image(f) + '<a href="' + report_url + f + '">' + f + '</a> - <a href="' + reviews_page + f + '">')
                 out.write(get_title(f))
                 out.write('</a>')
                 if is_review_format_bad(f):
