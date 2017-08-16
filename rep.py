@@ -10,6 +10,7 @@ from urllib.request import urlopen
 from bs4 import BeautifulSoup
 
 diff_reg = re.compile('^D[0-9]+$')
+git_reg = re.compile('^git:[a-zA-Z0-9_]+$')
 queue_dir = "/var/www/cciq/"
 report_dir = "/var/www/ccir/"
 report_url = "https://teemperor.de/ccir/"
@@ -45,6 +46,7 @@ def get_progress(f):
   return 0
 
 def get_title_impl(review):
+  print("Getting title for review " + review)
   soup = BeautifulSoup(urlopen(reviews_page + review), "html.parser")
   return ''.join([i if ord(i) < 128 else '' for i in soup.title.string]).strip().split(' ', 1)[1]
 
@@ -101,10 +103,16 @@ def get_log_tail(review):
     return ""
   return subprocess.check_output('tail -n14 ' + report_dir + review + ' | recode utf8..html', shell=True).decode('utf-8')
 
+def is_review(job):
+  return diff_reg.match(job)
+
 def generate_report(output_file, current_job):
     out = codecs.open(output_file + ".tmp", "w", "utf-8")
     current_percent = get_progress(current_job)
-    out.write('<p>Running: <a href="' + report_url + current_job + '">' + current_job + '</a> - <a href="' + reviews_page + current_job + '">' + get_title(current_job) + '</a>')
+    if is_review(current_job):
+      out.write('<p>Running: <a href="' + report_url + current_job + '">' + current_job + '</a> - <a href="' + reviews_page + current_job + '">' + get_title(current_job) + '</a>')
+    else:
+      out.write('<p>Running: ' + current_job)
     out.write('<br><progress style="width: 34em;" value="' + str(current_percent) + '" max="100"> </p>\n')
     out.write('<p style="font-size: 8px;"> Last update: ' + datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S') + '</p>')
     out.write('<pre style="font-size: 8px;">' + get_ccache_stats() + '</pre>')
@@ -116,15 +124,21 @@ def generate_report(output_file, current_job):
             out.write('<li style="list-style-type: none;">' + f + ' - <a href="' + reviews_page + f + '"> ')
             out.write(get_title(f))
             out.write('</a></li>\n')
+        elif git_reg.match(f):
+            out.write('<li style="list-style-type: none;">' + f + '</li>\n')
+
     out.write("</ul>\n")
 
     out.write("<h2>Done jobs</h2>\n")
     out.write("<ul>\n")
     for f in sorted_ls(report_dir)[0:100][::-1]:
         if f != current_job and not is_queued(f):
-            if diff_reg.match(f):
-                out.write('<li style="list-style-type: none;">' + get_review_image(f) + '<a href="' + report_url + f + '">' + f + '</a> - <a href="' + reviews_page + f + '">')
-                out.write(get_title(f))
+            if diff_reg.match(f) or git_reg.match(f):
+                if diff_reg.match(f):
+                  out.write('<li style="list-style-type: none;">' + get_review_image(f) + '<a href="' + report_url + f + '">' + f + '</a> - <a href="' + reviews_page + f + '">')
+                  out.write(get_title(f))
+                else:
+                  out.write('<li style="list-style-type: none;">' + get_review_image(f) + '<a href="' + report_url + f + '">'  + f)
                 out.write('</a>')
                 if is_review_format_bad(f):
                   out.write('<span style="color:red;"> [clang-format]</span> ')

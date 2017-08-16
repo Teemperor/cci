@@ -5,6 +5,7 @@ import os
 import time
 
 diff_reg = re.compile('^D[0-9]+$')
+git_reg = re.compile('^git:[a-zA-Z0-9_]+$')
 queue_dir = "/var/www/cciq/"
 report_dir = "/var/www/ccir/"
 
@@ -17,7 +18,7 @@ while True:
   time.sleep(1)
   for f in sorted_ls(queue_dir):
     print(f)
-    if (diff_reg.match(f)):
+    if (diff_reg.match(f) or git_reg.match(f)):
         print("Running CI on " + f)
         os.system("bash cci.sh " + f + " > " + report_dir + "/" + f)
         os.remove(queue_dir + "/" + f)
