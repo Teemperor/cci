@@ -26,13 +26,14 @@ git reset --hard
 git clean -fd
 git checkout master
 git pull
-git fetch teemperor
+git fetch -a origin
+git fetch -a teemperor
 
 if [ "$git_target" = true ] ; then
   set +e
   git checkout "$git_branch"
-  git reset --hard "$git_branch"
-  git rebase master
+  git reset --hard "teemperor/$git_branch"
+  git rebase master || git rebase --abort
   set -e
 fi
 
@@ -52,12 +53,19 @@ git reset --hard
 git clean -fd
 git checkout master
 git pull
-git fetch teemperor
+git fetch -a origin
+git fetch -a teemperor
 
 if [ "$git_target" = true ] ; then
   git checkout "$git_branch"
-  git reset --hard "$git_branch"
+  git reset --hard "teemperor/$git_branch"
   git rebase master
+  if [ $? -eq 0 ]; then
+    echo "REBASE OK"
+  else
+    git rebase --abort
+    echo "!!!REBASE FAILED!!!"
+  fi
 fi
 
 set +e
