@@ -112,7 +112,7 @@ def generate_report(output_file, current_job):
     if is_review(current_job):
       out.write('<p>Running: <a href="' + report_url + current_job + '">' + current_job + '</a> - <a href="' + reviews_page + current_job + '">' + get_title(current_job) + '</a>')
     else:
-      out.write('<p>Running: ' + current_job)
+      out.write('<p>Running: <a href="' + report_url + current_job + '">' + current_job + '</a> ')
     out.write('<br><progress style="width: 34em;" value="' + str(current_percent) + '" max="100"> </p>\n')
     out.write('<p style="font-size: 8px;"> Last update: ' + datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S') + '</p>')
     out.write('<pre style="font-size: 8px;">' + get_ccache_stats() + '</pre>')
