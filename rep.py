@@ -62,7 +62,7 @@ def is_review_good(review):
         return 0
       if "warning:" in line.lower():
         return 1
-      if "error:" in line.lower():
+      if "error:" in line.lower() and not "error: pathspec " in line:
         return 2
       if "exit code 1" in line.lower():
         return 2
@@ -141,8 +141,8 @@ def generate_report(output_file, current_job):
                   out.write('<li style="list-style-type: none;">' + get_review_image(f) + '<a href="' + report_url + f + '">'  + f)
                 out.write('</a>')
                 if is_review_format_bad(f):
-                  out.write('<span style="color:red;"> [clang-format]</span> ')
-                out.write('<a href="https://teemperor.de/cci-submit.php?rev=' + f + '">[rerun]</a>')
+                  out.write('<span style="color: rgb(255, 46, 0); font-weight: bold;"> [clang-format]</span>')
+                out.write('<a href="https://teemperor.de/cci-submit.php?rev=' + f + '"> [rerun]</a>')
                 out.write('</li>\n')
     out.write("</ul>\n")
     out.close()
