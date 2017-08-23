@@ -59,13 +59,16 @@ git fetch -a teemperor
 if [ "$git_target" = true ] ; then
   git checkout "$git_branch"
   git reset --hard "teemperor/$git_branch"
+  set +e
   git rebase master
   if [ $? -eq 0 ]; then
     echo "REBASE OK"
   else
     git rebase --abort
     echo "!!!REBASE FAILED!!!"
+    exit 1
   fi
+  set -e
 fi
 
 set +e
