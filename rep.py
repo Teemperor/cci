@@ -60,8 +60,6 @@ def is_review_good(review):
     for line in f:
       if "BUILD SUCCESS" in line:
         return 0
-      if "warning:" in line.lower():
-        return 1
       if "error:" in line.lower() and not "error: pathspec " in line:
         return 2
       if "exit code 1" in line.lower():
@@ -70,6 +68,9 @@ def is_review_good(review):
         return 2
       if "build failure" in line.lower():
         return 2
+    for line in f:
+      if "warning:" in line.lower():
+        return 1
   return 3
 
 def is_review_format_bad(review):

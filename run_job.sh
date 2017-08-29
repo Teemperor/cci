@@ -37,12 +37,6 @@ if [ "$git_target" = true ] ; then
   set -e
 fi
 
-cd projects/compiler-rt
-git reset --hard
-git clean -fd
-git pull
-cd ../..
-
 cd tools/clang/tools/extra
 git reset --hard
 git clean -fd
@@ -116,11 +110,4 @@ cd ../../..
 rm -rf build
 mkdir build
 cd build
-cmake -DCMAKE_C_FLAGS="-march=native -Wno-gnu-statement-expression" \
-      -DCMAKE_CXX_FLAGS="-march=native" \
-      -DLLVM_ENABLE_EXPENSIVE_CHECKS=ON -DLLVM_CCACHE_BUILD=On \
-      -DCMAKE_BUILD_TYPE=Release -DLLVM_LINK_LLVM_DYLIB=On -DLLVM_ENABLE_ASSERTIONS=On \
-      -DLLVM_LIT_ARGS="-v -j 3" -GNinja ../llvm
-ninja all check-clang -j3 -l 3
-
-echo "BUILD SUCCESS"
+bash -x ../build_llvm.sh ../llvm   all check-all -j3 -l 3
