@@ -1,0 +1,90 @@
+body {
+    width: 100%;
+    margin: 0px;
+}
+
+#updateIntervalRange  {
+  width: 8em;
+  height: 0.7em;
+}
+#updateIntervalText {
+  width: 2em;
+  height: 1.2em;
+}
+
+.current_prog {
+  width: 34em;
+  margin-left: 0.4em;
+}
+
+.current_time {
+  font-size: 8px;
+}
+
+.ccache_stats {
+  font-size: 8px;
+}
+
+a, a:visited, a:hover, a:active {
+  color: inherit;
+}
+
+.clang_format_warn::before {
+  color: #ff5722;
+  font-weight: bold;
+  content: " ⚠"
+}
+.clang_format_warn {
+  color: #ff5722;
+  font-weight: bold;
+}
+.clang_format_warn::after {
+  color: #ff5722;
+  font-weight: bold;
+  content: "⚠ "
+}
+
+.job_item {
+  list-style-type: none;
+  /*border: rgba(100, 100, 100, 0.64);
+  border-bottom-style: dotted;
+  border-bottom-width: thin;*/
+  padding-bottom: 0.2em;
+  margin-bottom: 0.2em;
+}
+
+.queued_h::before {
+  font-weight: bold;
+  content: "⏳"
+}
+.queued_h {
+  font-size: medium;
+}
+
+.done_h::before {
+  font-weight: bold;
+  content: "✓"
+}
+.done_h {
+  font-size: medium;
+}
+
+/* status messages */
+.fail { color: red !important; }
+.warning { color: #ffaf00 !important; }
+.good { color: green !important; }
+
+#header {
+    background: beige;
+    border-style: outset;
+    margin-left: 1em;
+    margin-right: 1em;
+    margin-top: 0.3em;
+    margin-bottom: 0.2em;
+    padding: 0.3em;
+}
+
+#main {
+    margin-left: 1em;
+    margin-right: 1em;
+}

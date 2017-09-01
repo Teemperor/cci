@@ -85,11 +85,11 @@ def is_review_format_bad(review):
 def get_review_image(review):
    review_status = is_review_good(review)
    if review_status == 2:
-     return '<span style="color: red;">✗</span>'
+     return '<span class="fail">✗</span>'
    elif review_status == 1:
-     return '<span style="color: #ffaf00;">⚠</span>'
+     return '<span class="warning">⚠</span>'
    elif review_status == 0:
-     return '<span style="color: green;">✓</span>'
+     return '<span class="good">✓</span>'
    else:
      return '?'
 
@@ -111,39 +111,39 @@ def generate_report(output_file, current_job):
     out = codecs.open(output_file + ".tmp", "w", "utf-8")
     current_percent = get_progress(current_job)
     if is_review(current_job):
-      out.write('<p>Running: <a href="' + report_url + current_job + '">' + current_job + '</a> - <a href="' + reviews_page + current_job + '">' + get_title(current_job) + '</a>')
+      out.write('<p class="current">Running: <a href="' + report_url + current_job + '">' + current_job + '</a> - <a href="' + reviews_page + current_job + '">' + get_title(current_job) + '</a>')
     else:
-      out.write('<p>Running: <a href="' + report_url + current_job + '">' + current_job + '</a> ')
-    out.write('<progress style="width: 34em;" value="' + str(current_percent) + '" max="100"> </p>\n')
-    out.write('<p style="font-size: 8px;"> Last update: ' + datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S') + '</p>')
-    out.write('<p style="font-size: 8px;">' + get_ccache_stats() + '</p>')
-    out.write('<pre style="background-color: #073642; color: #839496; border-style: double;">' + get_log_tail(current_job) + '</pre>')
-    out.write("<h2>Queued</h2>\n")
-    out.write("<ul>\n")
+      out.write('<p class="current">Running: <a href="' + report_url + current_job + '">' + current_job + '</a> ')
+    out.write('<progress class="current_prog" value="' + str(current_percent) + '" max="100"> </p>\n')
+    out.write('<p class="current_time"> Last update: ' + datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S') + '</p>')
+    out.write('<p class="ccache_stats">' + get_ccache_stats() + '</p>')
+    out.write('<pre class="log" style="background-color: #073642; color: #839496; border-style: double;">' + get_log_tail(current_job) + '</pre>')
+    out.write('<div class="queued"><h2 class="queued_h">Queued</h2>\n')
+    out.write('<ul class="queued_ul">\n')
     for f in sorted_ls(queue_dir)[1:15]:
         if diff_reg.match(f):
-            out.write('<li style="list-style-type: none;">' + f + ' - <a href="' + reviews_page + f + '"> ')
+            out.write('<li class="job_item">' + f + ' - <a href="' + reviews_page + f + '"> ')
             out.write(get_title(f))
             out.write('</a></li>\n')
         elif git_reg.match(f):
-            out.write('<li style="list-style-type: none;">' + f + '</li>\n')
+            out.write('<li class="job_item">' + f + '</li>\n')
 
-    out.write("</ul>\n")
+    out.write("</ul></div>\n")
 
-    out.write("<h2>Done jobs</h2>\n")
-    out.write("<ul>\n")
+    out.write('<div class="done"><h2 class="done_h">Done jobs</h2>\n')
+    out.write('<ul class="done_ul">\n')
     for f in sorted_ls(report_dir)[::-1][0:25]:
         if f != current_job and not is_queued(f):
             if diff_reg.match(f) or git_reg.match(f):
                 if diff_reg.match(f):
-                  out.write('<li style="list-style-type: none;">' + get_review_image(f) + '<a href="' + report_url + f + '">' + f + '</a> - <a href="' + reviews_page + f + '">')
+                  out.write('<li class="job_item">' + get_review_image(f) + '<a href="' + report_url + f + '">' + f + '</a> - <a href="' + reviews_page + f + '">')
                   out.write(get_title(f))
                 else:
-                  out.write('<li style="list-style-type: none;">' + get_review_image(f) + '<a href="' + report_url + f + '">'  + f)
+                  out.write('<li class="job_item">' + get_review_image(f) + '<a href="' + report_url + f + '">'  + f)
                 out.write('</a>')
                 if is_review_format_bad(f):
-                  out.write('<span style="color: rgb(255, 46, 0); font-weight: bold;"> [clang-format]</span>')
-                out.write('<a href="https://teemperor.de/cci-submit.php?rev=' + f + '"> [rerun]</a>')
+                  out.write('<span class="clang_format_warn">[clang-format]</span>')
+                out.write('<a class="rerun_link" href="https://teemperor.de/cci-submit.php?rev=' + f + '"> [rerun]</a>')
                 out.write('</li>\n')
     out.write("</ul>\n")
     out.close()
