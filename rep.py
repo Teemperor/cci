@@ -97,7 +97,7 @@ def is_queued(review):
   return os.path.isfile(queue_dir + review)
 
 def get_ccache_stats():
-  return subprocess.check_output('ccache -s | grep cache | grep -v ccache', shell=True).decode('utf-8')
+  return subprocess.check_output('ccache -s | grep cache | grep -v ccache | tr "\n" "|" | tr -s " "; echo -n "LOAD:" ; cat /proc/loadavg', shell=True).decode('utf-8')
 
 def get_log_tail(review):
   if review == "NULL":
@@ -114,9 +114,9 @@ def generate_report(output_file, current_job):
       out.write('<p>Running: <a href="' + report_url + current_job + '">' + current_job + '</a> - <a href="' + reviews_page + current_job + '">' + get_title(current_job) + '</a>')
     else:
       out.write('<p>Running: <a href="' + report_url + current_job + '">' + current_job + '</a> ')
-    out.write('<br><progress style="width: 34em;" value="' + str(current_percent) + '" max="100"> </p>\n')
+    out.write('<progress style="width: 34em;" value="' + str(current_percent) + '" max="100"> </p>\n')
     out.write('<p style="font-size: 8px;"> Last update: ' + datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S') + '</p>')
-    out.write('<pre style="font-size: 8px;">' + get_ccache_stats() + '</pre>')
+    out.write('<p style="font-size: 8px;">' + get_ccache_stats() + '</p>')
     out.write('<pre style="background-color: #073642; color: #839496; border-style: double;">' + get_log_tail(current_job) + '</pre>')
     out.write("<h2>Queued</h2>\n")
     out.write("<ul>\n")
@@ -132,7 +132,7 @@ def generate_report(output_file, current_job):
 
     out.write("<h2>Done jobs</h2>\n")
     out.write("<ul>\n")
-    for f in sorted_ls(report_dir)[0:100][::-1]:
+    for f in sorted_ls(report_dir)[::-1][0:25]:
         if f != current_job and not is_queued(f):
             if diff_reg.match(f) or git_reg.match(f):
                 if diff_reg.match(f):

@@ -110,4 +110,4 @@ cd ../../..
 rm -rf build
 mkdir build
 cd build
-bash -x ../build_llvm.sh ../llvm   all check-all -j3 -l 3
+ionice -t -c 3 nice -n 19 bash -x ../build_llvm.sh ../llvm   all check-all -j3

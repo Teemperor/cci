@@ -1,13 +1,10 @@
 #!/bin/bash
 
-export CC="clang"
-export CXX="clang++"
-export PATH="/usr/lib/ccache/bin/:$PATH"
-
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
 while :
 do
+  echo "Restart build"
   cd $DIR
   cd llvm
   git pull
@@ -20,5 +17,5 @@ do
   rm -rf build
   mkdir build
   cd build
-  bash -x ../../build_llvm.sh ../llvm  all  -j1 -l1
+  ionice -t -c 3 nice -n 19 bash -x ../../build_llvm.sh ../llvm  all  -j1 -l1
 done
