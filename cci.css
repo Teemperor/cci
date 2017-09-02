@@ -60,6 +60,14 @@ a, a:visited, a:hover, a:active {
 .queued_h {
   font-size: medium;
 }
+.queued_ul>.job_item {
+  float: left;
+  margin-left: 0.5em;
+}
+.queued_ul>.job_item::before {
+  content: " | ";
+}
+
 
 .done_h::before {
   font-weight: bold;
@@ -70,9 +78,9 @@ a, a:visited, a:hover, a:active {
 }
 
 /* status messages */
-.fail { color: red !important; }
-.warning { color: #ffaf00 !important; }
-.good { color: green !important; }
+.fail { font-weight: bold; color: red !important; padding-right: 0.3em; }
+.warning { font-weight: bold; color: #ffaf00 !important; padding-right: 0.3em; }
+.good { font-weight: bold; color: green !important; padding-right: 0.3em; }
 
 #header {
     background: beige;

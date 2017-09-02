@@ -55,22 +55,53 @@ def get_title(review):
     cached_titles[review] = get_title_impl(review)
   return cached_titles[review]
 
+ignored_tests = set([
+  "LLVM-Unit :: Support/./SupportTests/CrashRecoveryTest.Basic",
+  "LLVM-Unit :: Support/./SupportTests/CrashRecoveryTest.Cleanup",
+  "LLVM :: tools/llvm-mt/big_merge.test",
+  "LLVM :: tools/llvm-mt/simple_merge.test",
+  "LLVM :: tools/llvm-mt/single_file.test",
+  "LLVM :: tools/llvm-mt/xml_error.test"
+])
+
+def get_failed_tests(review):
+  failed_tests = set()
+  parsing_tests = False
+  with open(report_dir + review) as f:
+    for line in f:
+      if parsing_tests:
+        content = line[len("00:00:00"):].strip()
+        if len(content) == 0:
+          break
+        failed_tests.add(content)
+      if "Failing Tests " in line:
+        parsing_tests = True
+  return list(failed_tests.difference(ignored_tests))
+
 def is_review_good(review):
   with open(report_dir + review) as f:
     for line in f:
       if "BUILD SUCCESS" in line:
         return 0
       if "error:" in line.lower() and not "error: pathspec " in line:
-        return 2
+        if not "==ERROR:" in line:
+          if not "FileCheck error:" in line:
+            return 2
       if "exit code 1" in line.lower():
         return 2
-      if "+ exit 1" in line.lower():
-        return 2
-      if "build failure" in line.lower():
-        return 2
-    for line in f:
       if "warning:" in line.lower():
         return 1
+      if "+ exit 1" in line.lower():
+        return 2
+      if "failing tests " in line.lower():
+        failed_tests = get_failed_tests(review)
+        #print(failed_tests)
+        if len(failed_tests) == 0:
+          return 0
+        else:
+          return 2
+      if "build failure" in line.lower():
+        return 2
   return 3
 
 def is_review_format_bad(review):
@@ -84,12 +115,12 @@ def is_review_format_bad(review):
 
 def get_review_image(review):
    review_status = is_review_good(review)
-   if review_status == 2:
-     return '<span class="fail">✗</span>'
-   elif review_status == 1:
-     return '<span class="warning">⚠</span>'
+   if review_status >= 1:
+     return '<span class="fail">☒</span>'
+   #elif review_status == 1:
+   #  return '<span class="warning">⚠</span>'
    elif review_status == 0:
-     return '<span class="good">✓</span>'
+     return '<span class="good">☑</span>'
    else:
      return '?'
 
@@ -128,7 +159,7 @@ def generate_report(output_file, current_job):
         elif git_reg.match(f):
             out.write('<li class="job_item">' + f + '</li>\n')
 
-    out.write("</ul></div>\n")
+    out.write("</ul><br></div>\n")
 
     out.write('<div class="done"><h2 class="done_h">Done jobs</h2>\n')
     out.write('<ul class="done_ul">\n')
