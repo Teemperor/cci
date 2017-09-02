@@ -19,10 +19,16 @@ body {
 
 .current_time {
   font-size: 8px;
+  display: inline;
+}
+
+.ccache_stats::before {
+  content: " |";
 }
 
 .ccache_stats {
   font-size: 8px;
+  display: inline;
 }
 
 a, a:visited, a:hover, a:active {
@@ -46,11 +52,12 @@ a, a:visited, a:hover, a:active {
 
 .job_item {
   list-style-type: none;
-  /*border: rgba(100, 100, 100, 0.64);
-  border-bottom-style: dotted;
-  border-bottom-width: thin;*/
   padding-bottom: 0.2em;
   margin-bottom: 0.2em;
+}
+
+.job_item:nth-child(odd) {
+  background: linear-gradient(to right, #e6e6e6, white);
 }
 
 .queued_h::before {

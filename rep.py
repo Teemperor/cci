@@ -133,7 +133,7 @@ def get_ccache_stats():
 def get_log_tail(review):
   if review == "NULL":
     return ""
-  return subprocess.check_output('tail -n14 ' + report_dir + review + ' | recode utf8..html', shell=True).decode('utf-8')
+  return subprocess.check_output('tail -n10 ' + report_dir + review + ' | recode utf8..html', shell=True).decode('utf-8')
 
 def is_review(job):
   return diff_reg.match(job)
@@ -141,13 +141,13 @@ def is_review(job):
 def generate_report(output_file, current_job):
     out = codecs.open(output_file + ".tmp", "w", "utf-8")
     current_percent = get_progress(current_job)
+    out.write('<div class="meta_stats"><p class="current_time"> Last update: ' + datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S') + '</p>')
+    out.write('<p class="ccache_stats">' + get_ccache_stats() + '</p></div>\n')
     if is_review(current_job):
       out.write('<p class="current">Running: <a href="' + report_url + current_job + '">' + current_job + '</a> - <a href="' + reviews_page + current_job + '">' + get_title(current_job) + '</a>')
     else:
       out.write('<p class="current">Running: <a href="' + report_url + current_job + '">' + current_job + '</a> ')
     out.write('<progress class="current_prog" value="' + str(current_percent) + '" max="100"> </p>\n')
-    out.write('<p class="current_time"> Last update: ' + datetime.datetime.fromtimestamp(time.time()).strftime('%Y-%m-%d %H:%M:%S') + '</p>')
-    out.write('<p class="ccache_stats">' + get_ccache_stats() + '</p>')
     out.write('<pre class="log" style="background-color: #073642; color: #839496; border-style: double;">' + get_log_tail(current_job) + '</pre>')
     out.write('<div class="queued"><h2 class="queued_h">Queued</h2>\n')
     out.write('<ul class="queued_ul">\n')
