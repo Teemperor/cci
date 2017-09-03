@@ -58,10 +58,6 @@ def get_title(review):
 ignored_tests = set([
   "LLVM-Unit :: Support/./SupportTests/CrashRecoveryTest.Basic",
   "LLVM-Unit :: Support/./SupportTests/CrashRecoveryTest.Cleanup",
-  "LLVM :: tools/llvm-mt/big_merge.test",
-  "LLVM :: tools/llvm-mt/simple_merge.test",
-  "LLVM :: tools/llvm-mt/single_file.test",
-  "LLVM :: tools/llvm-mt/xml_error.test"
 ])
 
 def get_failed_tests(review):
@@ -148,7 +144,7 @@ def generate_report(output_file, current_job):
     else:
       out.write('<p class="current">Running: <a href="' + report_url + current_job + '">' + current_job + '</a> ')
     out.write('<progress class="current_prog" value="' + str(current_percent) + '" max="100"> </p>\n')
-    out.write('<pre class="log" style="background-color: #073642; color: #839496; border-style: double;">' + get_log_tail(current_job) + '</pre>')
+    out.write('<pre class="log">' + get_log_tail(current_job) + '</pre>')
     out.write('<div class="queued"><h2 class="queued_h">Queued</h2>\n')
     out.write('<ul class="queued_ul">\n')
     for f in sorted_ls(queue_dir)[1:15]:
