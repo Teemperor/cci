@@ -25,7 +25,10 @@ def get_progress(f):
   if f == "NULL":
     return 100
   path = report_dir + f
-  contents = open(path).readlines()[::-1]
+  try:
+    contents = open(path).readlines()[::-1]
+  except FileNotFoundError:
+    return 0
   for line in contents:
     left = 0
     right = 0
@@ -170,7 +173,8 @@ def generate_report(output_file, current_job):
                 out.write('</a>')
                 if is_review_format_bad(f):
                   out.write('<span class="clang_format_warn">[clang-format]</span>')
-                out.write('<a class="rerun_link" href="https://teemperor.de/cci-submit.php?rev=' + f + '"> [rerun]</a>')
+                out.write('<a class="patch_link" href="' + report_url + f + '.patch">[patch]</a>')
+                out.write('<a class="rerun_link" href="https://teemperor.de/cci-submit.php?rev=' + f + '">[rerun]</a>')
                 out.write('</li>\n')
     out.write("</ul>\n")
     out.close()

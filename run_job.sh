@@ -68,13 +68,15 @@ fi
 set +e
 
 if [ "$git_target" = true ] ; then
-  git clang-format --diff HEAD^
-  git clang-format --diff HEAD^ | grep -q "clang-format did not modify any files"
+  git clang-format --diff master
+  git clang-format --diff master | grep -q "clang-format did not modify any files"
   if [ $? -eq 0 ]; then
     echo "CLANG-FORMAT-OK"
   else
     echo "CLANG-FORMAT-FAIL"
   fi
+  git clang-format master
+  git diff -U9999 master > /var/www/ccir/$JOB.patch
 else
   echo "Trying with -p0"
   patch --dry-run -f -p0 < ../../../patch.diff
