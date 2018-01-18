@@ -33,7 +33,14 @@ if [ "$git_target" = true ] ; then
   set +e
   git checkout "$git_branch"
   git reset --hard "teemperor/$git_branch"
-  git rebase master || git rebase --abort
+  git rebase master
+  if [ $? -eq 0 ]; then
+    echo "REBASE OK"
+  else
+    git rebase --abort
+    echo "!!!REBASE FAILED!!!"
+    exit 1
+  fi
   set -e
 fi
 
@@ -41,6 +48,20 @@ cd tools/clang/tools/extra
 git reset --hard
 git clean -fd
 git pull
+if [ "$git_target" = true ] ; then
+  set +e
+  git checkout "$git_branch"
+  git reset --hard "teemperor/$git_branch"
+  git rebase master
+  if [ $? -eq 0 ]; then
+    echo "REBASE OK"
+  else
+    git rebase --abort
+    echo "!!!REBASE FAILED!!!"
+    exit 1
+  fi
+  set -e
+fi
 
 cd ../..
 git reset --hard

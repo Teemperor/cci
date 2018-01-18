@@ -1,10 +1,7 @@
-#!/bin/bash
+#!/usr/bin/bash
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" && pwd )"
 
-while :
-do
-  echo "Restart build"
   cd $DIR
   cd llvm
   git pull
@@ -18,4 +15,4 @@ do
   mkdir build
   cd build
   ionice -t -c 3 nice -n 19 bash -x ../../build_llvm.sh ../llvm  all  -j1 -l1
-done
+  sleep 6h

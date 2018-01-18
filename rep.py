@@ -61,6 +61,11 @@ def get_title(review):
 ignored_tests = set([
   "LLVM-Unit :: Support/./SupportTests/CrashRecoveryTest.Basic",
   "LLVM-Unit :: Support/./SupportTests/CrashRecoveryTest.Cleanup",
+  "LLVM :: Transforms/SampleProfile/indirect-call.ll",
+  "LLVM :: Transforms/SampleProfile/inline-combine.ll",
+  "LLVM :: Transforms/SampleProfile/inline-coverage.ll",
+  "LLVM :: Transforms/SampleProfile/inline.ll",
+  "LLVM :: Transforms/SampleProfile/remarks.ll"
 ])
 
 def get_failed_tests(review):
@@ -82,10 +87,10 @@ def is_review_good(review):
     for line in f:
       if "BUILD SUCCESS" in line:
         return 0
-      if "error:" in line.lower() and not "error: pathspec " in line:
-        if not "==ERROR:" in line:
-          if not "FileCheck error:" in line:
-            return 2
+      #if "error:" in line.lower() and not "error: pathspec " in line:
+      #  if not "==ERROR:" in line:
+      #    if not "FileCheck error:" in line:
+      #      return 2
       if "exit code 1" in line.lower():
         return 2
       if "warning:" in line.lower():
@@ -101,7 +106,7 @@ def is_review_good(review):
           return 2
       if "build failure" in line.lower():
         return 2
-  return 3
+  return 2
 
 def is_review_format_bad(review):
   with open(report_dir + review) as f:
@@ -171,8 +176,11 @@ def generate_report(output_file, current_job):
                 else:
                   out.write('<li class="job_item">' + get_review_image(f) + '<a href="' + report_url + f + '">'  + f)
                 out.write('</a>')
-                if is_review_format_bad(f):
-                  out.write('<span class="clang_format_warn">[clang-format]</span>')
+                try:
+                  if is_review_format_bad(f):
+                    out.write('<span class="clang_format_warn">[clang-format]</span>')
+                except UnicodeDecodeError:
+                  out.write('<span class="clang_format_warn">[failed to parse log]</span>')
                 out.write('<a class="patch_link" href="' + report_url + f + '.patch">[patch]</a>')
                 out.write('<a class="rerun_link" href="https://teemperor.de/cci-submit.php?rev=' + f + '">[rerun]</a>')
                 out.write('</li>\n')
