@@ -1,5 +1,53 @@
 #!/usr/bin/bash
 
+to_check=""
+
+function try_rebase {
+  # Try to rebase
+  set +e
+  git checkout "$git_branch"
+  git reset --hard "teemperor/$git_branch"
+  if [ $? -eq 0 ]; then
+    current_project=$(basename "$PWD")
+    echo "Adding $current_project to test queue"
+    to_check="$to_check check-$current_project"
+  fi
+
+  git rebase master
+  if [ $? -eq 0 ]; then
+    echo "REBASE OK"
+  else
+    git rebase --abort
+    echo "!!!REBASE FAILED!!!"
+    exit 1
+  fi
+  set -e
+}
+
+function clang_format_check {
+  set +e
+  git clang-format --diff master
+  git clang-format --diff master | grep -q "clang-format did not modify any files"
+  if [ $? -eq 0 ]; then
+    echo "CLANG-FORMAT-OK"
+  else
+    echo "CLANG-FORMAT-FAIL"
+  fi
+  git clang-format master
+  set -e
+}
+
+function prepare_project {
+  git reset --hard
+  git clean -fd
+  git checkout master
+  git pull
+  git fetch -a origin
+  git fetch -a teemperor
+  try_rebase
+  clang_format_check
+}
+
 date
 
 set -e
@@ -12,125 +60,20 @@ export PATH="/usr/lib/ccache/bin/:$PATH"
 
 JOB="$1"
 
-git_target=false
-git_branch=""
-if [[ "$JOB" =~ ^git:* ]]; then
-  git_target=true
-  git_branch=$(echo "$JOB" | cut -c 5-)
-else
-  wget "https://reviews.llvm.org/${JOB}?download=true" -O patch.diff
-fi
+git_branch="$JOB"
 
 cd llvm
-git reset --hard
-git clean -fd
-git checkout master
-git pull
-git fetch -a origin
-git fetch -a teemperor
+prepare_project
 
-if [ "$git_target" = true ] ; then
-  set +e
-  git checkout "$git_branch"
-  git reset --hard "teemperor/$git_branch"
-  git rebase master
-  if [ $? -eq 0 ]; then
-    echo "REBASE OK"
-  else
-    git rebase --abort
-    echo "!!!REBASE FAILED!!!"
-    exit 1
-  fi
-  set -e
-fi
+cd tools/clang
+prepare_project
 
-cd tools/clang/tools/extra
-git reset --hard
-git clean -fd
-git pull
-if [ "$git_target" = true ] ; then
-  set +e
-  git checkout "$git_branch"
-  git reset --hard "teemperor/$git_branch"
-  git rebase master
-  if [ $? -eq 0 ]; then
-    echo "REBASE OK"
-  else
-    git rebase --abort
-    echo "!!!REBASE FAILED!!!"
-    exit 1
-  fi
-  set -e
-fi
-
-cd ../..
-git reset --hard
-git clean -fd
-git checkout master
-git pull
-git fetch -a origin
-git fetch -a teemperor
-
-if [ "$git_target" = true ] ; then
-  git checkout "$git_branch"
-  git reset --hard "teemperor/$git_branch"
-  set +e
-  git rebase master
-  if [ $? -eq 0 ]; then
-    echo "REBASE OK"
-  else
-    git rebase --abort
-    echo "!!!REBASE FAILED!!!"
-    exit 1
-  fi
-  set -e
-fi
-
-set +e
-
-if [ "$git_target" = true ] ; then
-  git clang-format --diff master
-  git clang-format --diff master | grep -q "clang-format did not modify any files"
-  if [ $? -eq 0 ]; then
-    echo "CLANG-FORMAT-OK"
-  else
-    echo "CLANG-FORMAT-FAIL"
-  fi
-  git clang-format master
-  git diff -U9999 master > /var/www/ccir/$JOB.patch
-else
-  echo "Trying with -p0"
-  patch --dry-run -f -p0 < ../../../patch.diff
-  if [ $? -eq 0 ]; then
-    patch -f -p0 < ../../../patch.diff
-    echo "Used -p0"
-  else
-    echo "Trying with -p1"
-    patch --dry-run -f -p1 < ../../../patch.diff
-    if [ $? -eq 0 ]; then
-      echo "Using -p1"
-      patch -f -p1 < ../../../patch.diff
-    else
-      echo "Patch file: "
-      cat ../../../patch.diff
-      echo "Giving up to patch file"
-      exit 1
-    fi
-  fi
-  git add *
-  git clang-format --diff
-  git clang-format --diff | grep -q "clang-format did not modify any files"
-  if [ $? -eq 0 ]; then
-    echo "CLANG-FORMAT-OK"
-  else
-    echo "CLANG-FORMAT-FAIL"
-  fi
-fi
-set -e
+cd ../lldb
+prepare_project
 
 cd ../../..
 
 rm -rf build
 mkdir build
 cd build
-ionice -t -c 3 nice -n 19 bash -x ../build_llvm.sh ../llvm   all check-all -j3
+ionice -t -c 3 nice -n 19 bash -x ../build_llvm.sh ../llvm all $to_check -j3

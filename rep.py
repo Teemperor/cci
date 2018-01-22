@@ -9,8 +9,7 @@ import codecs
 from urllib.request import urlopen
 from bs4 import BeautifulSoup
 
-diff_reg = re.compile('^D[0-9]+$')
-git_reg = re.compile('^git:[a-zA-Z0-9_]+$')
+git_reg = re.compile('^[a-zA-Z0-9_]+$')
 queue_dir = "/var/www/cciq/"
 report_dir = "/var/www/ccir/"
 report_url = "https://teemperor.de/ccir/"
@@ -140,7 +139,7 @@ def get_log_tail(review):
   return subprocess.check_output('tail -n10 ' + report_dir + review + ' | recode utf8..html', shell=True).decode('utf-8')
 
 def is_review(job):
-  return diff_reg.match(job)
+  return False # diff_reg.match(job)
 
 def generate_report(output_file, current_job):
     out = codecs.open(output_file + ".tmp", "w", "utf-8")
@@ -156,12 +155,7 @@ def generate_report(output_file, current_job):
     out.write('<div class="queued"><h2 class="queued_h">Queued</h2>\n')
     out.write('<ul class="queued_ul">\n')
     for f in sorted_ls(queue_dir)[1:15]:
-        if diff_reg.match(f):
-            out.write('<li class="job_item">' + f + ' - <a href="' + reviews_page + f + '"> ')
-            out.write(get_title(f))
-            out.write('</a></li>\n')
-        elif git_reg.match(f):
-            out.write('<li class="job_item">' + f + '</li>\n')
+      out.write('<li class="job_item">' + f + '</li>\n')
 
     out.write("</ul><br></div>\n")
 
@@ -169,12 +163,8 @@ def generate_report(output_file, current_job):
     out.write('<ul class="done_ul">\n')
     for f in sorted_ls(report_dir)[::-1][0:25]:
         if f != current_job and not is_queued(f):
-            if diff_reg.match(f) or git_reg.match(f):
-                if diff_reg.match(f):
-                  out.write('<li class="job_item">' + get_review_image(f) + '<a href="' + report_url + f + '">' + f + '</a> - <a href="' + reviews_page + f + '">')
-                  out.write(get_title(f))
-                else:
-                  out.write('<li class="job_item">' + get_review_image(f) + '<a href="' + report_url + f + '">'  + f)
+            if git_reg.match(f):
+                out.write('<li class="job_item">' + get_review_image(f) + '<a href="' + report_url + f + '">'  + f)
                 out.write('</a>')
                 try:
                   if is_review_format_bad(f):
